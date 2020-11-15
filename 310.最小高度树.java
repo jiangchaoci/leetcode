@@ -1,3 +1,6 @@
+import java.util.ArrayList;
+import java.util.Queue;
+
 /*
  * @lc app=leetcode.cn id=310 lang=java
  *
@@ -7,46 +10,62 @@
 // @lc code=start
 class Solution {
     public List<Integer> findMinHeightTrees(int n, int[][] edges) {
-        List<List<Integer>> list = new ArrayList<>();
-        for (int i = 0; i < n; i++) {
-            list.add(new ArrayList<>());
+        List<Integer> res = new ArrayList<>();
+        if (n == 1) {
+            res.add(0);
+            return res;
+        } else if (n == 2) {
+            res.add(0);
+            res.add(1);
+            return res;
         }
-        if (n <= 2) {
-            List<Integer> temp = new ArrayList<Integer>();
-            for (int i = 0; i < n; i++)
-                temp.add(i);
-            return temp;
-        }
+        int[] indgree = new int[n];
+        List<List<Integer>> adj = new ArrayList<>();
+        for (int i = 0; i < n; i++)
+            adj.add(new ArrayList<>());
         for (int[] edge : edges) {
-            list.get(edge[0]).add(edge[1]);
-            list.get(edge[1]).add(edge[0]);
+            indgree[edge[0]]++;
+            indgree[edge[1]]++;
+            adj.get(edge[0]).add(edge[1]);
+            adj.get(edge[1]).add(edge[0]);
         }
-        boolean[] visited = new boolean[n];
-        int minHeight = Integer.MAX_VALUE;
         Queue<Integer> queue = new LinkedList<>();
-        List<Integer> res = new ArrayList<Integer>();
+        int remain = n;
         for (int i = 0; i < n; i++) {
-            if (list.get(i).size() <= 1) continue;
-            Arrays.fill(visited, false);
-            int height = 0;
-            queue.offer(i);
-            while (!queue.isEmpty()) {
-                int size = queue.size();
-                height++;
-                for (int k = 0; k < size; k++) {
-                    int node = queue.poll();
-                    visited[node] = true;
-                    for (int num : list.get(node)) {
-                        if (!visited[num])
-                            queue.offer(num);
-                    }
+            if (indgree[i] == 1) {
+                queue.offer(i);
+                remain--;
+                indgree[i] = 0;
+            }
+        }
+        if (remain <= 2) {
+            for (int i = 0; i < n; i++) {
+                if (indgree[i] != 0) {
+                    res.add(i);
                 }
             }
-            if (height < minHeight) {
-                minHeight = height;
-                res.clear();
-                res.add(i);
-            } else if (height == minHeight) {
+        }
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                int node = queue.poll();
+                for (int neibor : adj.get(node)) {
+                    if (indgree[neibor] != 0)
+                        indgree[neibor]--;
+                }
+            }
+            for (int i = 0; i < n; i++) {
+                if (indgree[i] == 1) {
+                    queue.offer(i);
+                    remain--;
+                    indgree[i] = 0;
+                }
+            }
+            if (remain <= 2)
+                break;
+        }
+        for (int i = 0; i < n; i++) {
+            if (indgree[i] != 0) {
                 res.add(i);
             }
         }
